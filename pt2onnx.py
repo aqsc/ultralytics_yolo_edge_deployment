@@ -151,3 +151,37 @@ class YOLOv8:
         # 返回修改后的输入图像
         return input_image
         
+   def run_pipeline(self, input_image):
+        """
+        使用ONNX模型进行推理，并返回带有检测结果的输出图像。
+        返回:
+            output_img: 带有检测结果的输出图像。
+        """
+        # 获取模型的输入
+        model_inputs = self.session.get_inputs()
+        # 保存输入的形状，稍后使用
+        # input_shape：(1,3,640,640)
+        # self.input_width:640,self.input_height:640
+        input_shape = model_inputs[0].shape
+        self.input_width = input_shape[3]
+        self.input_height = input_shape[2]
+
+        # 对图像数据进行预处理
+        t1 = time.time()
+        img_data = self.preprocess(input_image)
+        t2 = time.time()
+        print("onnx preprocess time:", t2 - t1)
+
+        # 使用预处理后的图像数据运行推理,outputs:(1,84,8400)  8400 = 80*80 + 40*40 + 20*20
+        t1 = time.time()
+        outputs = self.session.run(None, {model_inputs[0].name: img_data})
+        t2 = time.time()
+        print("onnx run time:", t2 - t1)
+
+        # 对输出进行后处理以获取输出图像
+        t1 = time.time()
+        result_img = self.postprocess(self.img, outputs)  # 输出图像
+        t2 = time.time()
+        print("onnx postprocess time:", t2 - t1)
+
+        return result_img
