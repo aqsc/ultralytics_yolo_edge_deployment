@@ -150,7 +150,35 @@ class YOLOv8:
             self.draw_detections(input_image, box, score, class_id)
         # 返回修改后的输入图像
         return input_image
-        
+
+   def draw_detections(self, img, box, score, class_id):
+        # 提取边界框的坐标
+        x1, y1, w, h = box
+
+        # 获取类别ID对应的颜色
+        color = self.color_palette[class_id]
+
+        # 在图像上绘制边界框
+        cv2.rectangle(img, (int(x1), int(y1)), (int(x1 + w), int(y1 + h)), color, 2)
+
+        # 创建包含类名和得分的标签文本
+        label = f"{self.classes[class_id]}: {score:.2f}"
+
+        # 计算标签文本的尺寸
+        (label_width, label_height), _ = cv2.getTextSize(label, cv2.FONT_HERSHEY_SIMPLEX, 0.5, 1)
+
+        # 计算标签文本的位置
+        label_x = x1
+        label_y = y1 - 10 if y1 - 10 > label_height else y1 + 10
+
+        # 绘制填充的矩形作为标签文本的背景
+        cv2.rectangle(
+            img, (label_x, label_y - label_height), (label_x + label_width, label_y + label_height), color, cv2.FILLED
+        )
+
+        # 在图像上绘制标签文本
+        cv2.putText(img, label, (label_x, label_y), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 1, cv2.LINE_AA)
+
    def run_pipeline(self, input_image):
         """
         使用ONNX模型进行推理，并返回带有检测结果的输出图像。
